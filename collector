@@ -2,12 +2,6 @@
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Exception.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Collection.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Compiler.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Config.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Manager.php';
-
 $Collection = isset($argv[1]) ? $argv[1] : null;
 
 try {
