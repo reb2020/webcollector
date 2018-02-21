@@ -5,6 +5,7 @@ namespace WebCollector;
 use WebCollector\Compiler;
 use WebCollector\Config;
 use WebCollector\Exception as CollectorException;
+use WebCollector\Collection as Collection;
 
 use MatthiasMullie\Minify;
 
@@ -55,10 +56,77 @@ class Manager {
             }
             $Collection->last_files = $LastFiles;
             
+            //CSS
+            $NewCss = [];
+            $Index = 0;
+            foreach ($Collection->css->getData() as $Data){
+                $FileInfo = pathinfo($Data->file);
+                if($FileInfo["filename"] == "*"){
+                    $CssScanDir = $this->Dir . $FileInfo["dirname"] . DIRECTORY_SEPARATOR;
+                    if(!is_dir($CssScanDir)){
+                        throw new CollectorException("Collector not found import dir " . $CssScanDir);
+                    } else {
+                        foreach (scandir($CssScanDir) as $FileName){
+                            if(
+                                (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
+                                (!isset($FileInfo["extension"]) && (strpos($FileName, ".css") || strpos($FileName, ".less") || strpos($FileName, ".scss")))
+                               ){
+                                   $NewCss[$Index]['file'] = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
+                                   if($Data->import_dir){
+                                        $NewCss[$Index]['import_dir'] = $Data->import_dir;
+                                   }
+                                   $NewCss[$Index]['minify'] = $Data->minify;
+                                   $Index++;
+                            }
+                        }
+                    }
+                } else {
+                    $NewCss[$Index]['file'] = $Data->file;
+                    if($Data->import_dir){
+                        $NewCss[$Index]['import_dir'] = $Data->import_dir;
+                    }
+                    $NewCss[$Index]['minify'] = $Data->minify;
+                    $Index++;
+                }
+            }
+            
+            $Collection->css = new Collection(null, $NewCss);
+            
+            //JS
+            $NewJS = [];
+            $Index = 0;
+            foreach ($Collection->js->getData() as $Data){
+                $FileInfo = pathinfo($Data->file);
+                if($FileInfo["filename"] == "*"){
+                    $JsScanDir = $this->Dir . $FileInfo["dirname"] . DIRECTORY_SEPARATOR;
+                    if(!is_dir($JsScanDir)){
+                        throw new CollectorException("Collector not found import dir " . $JsScanDir);
+                    } else {
+                        foreach (scandir($JsScanDir) as $FileName){
+                            if(
+                                (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
+                                (!isset($FileInfo["extension"]) && strpos($FileName, ".js"))
+                                ){
+                                    $NewJS[$Index]['file'] = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
+                                    $NewJS[$Index]['minify'] = $Data->minify;
+                                    $Index++;
+                            }
+                        }
+                    }
+                } else {
+                    $NewJS[$Index]['file'] = $Data->file;
+                    $NewJS[$Index]['minify'] = $Data->minify;
+                    $Index++;
+                }
+            }
+            
+            $Collection->js = new Collection(null, $NewJS);
+            
             $Data = [
                         'css' => $this->css($Collection), 
                         'js' => $this->js($Collection)
             ];
+            
             $this->Compiler->add($Collection->name, $Data);
         }
         $this->Compiler->save();
@@ -83,9 +151,7 @@ class Manager {
             
             echo " -> " . $Data->file . " \n";
             
-            if($FileInfo["filename"] == "*"){
-                
-            } else if ($FileInfo["extension"] == "css") {
+            if ($FileInfo["extension"] == "css") {
                 $NewFileName = md5(time() . rand(10000, 99999)) . '.css';
                 copy($this->Dir . $Data->file, $this->Dir . $Collection->compiled_dir . $NewFileName);
                 
@@ -160,9 +226,7 @@ class Manager {
             
             echo " -> " . $Data->file . " \n";
             
-            if($FileInfo["filename"] == "*"){
-                
-            } else if ($FileInfo["extension"] == "js") {
+            if ($FileInfo["extension"] == "js") {
                 $NewFileName = md5(time() . rand(10000, 99999)) . '.js';
                 copy($this->Dir . $Data->file, $this->Dir . $Collection->compiled_dir . $NewFileName);
                 
