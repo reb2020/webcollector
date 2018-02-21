@@ -2,9 +2,17 @@
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
-$name = $argv[1];
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Exception.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Collection.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Compiler.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Config.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'reb/webcollector/src/WebCollector/Manager.php';
 
-echo name;
+$Collection = isset($argv[1]) ? $argv[1] : null;
 
-$Manager = new \WebCollector\Manager();
-
+try {
+	$Manager = new \WebCollector\Manager(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR, $Collection);
+} catch (Exception $e) {
+	echo $e->getMessage();
+	echo "\n";
+}
