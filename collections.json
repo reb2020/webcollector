@@ -4,7 +4,10 @@
 		"base_url": "/",
 		"compiled_dir": "public/compiled/",
 		"transport": {
-			"class": "File"
+			"class": "File",
+			"parameters": {
+				"name": "Test"
+			}
 		},
 		"css": [
 			{

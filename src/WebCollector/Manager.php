@@ -128,7 +128,9 @@ class Manager {
             ];
             
             $this->Compiler->add($Collection->name, $Data);
+            $this->transport($Collection);
         }
+        
         $this->Compiler->save();
         $this->clear();
     }
@@ -257,6 +259,15 @@ class Manager {
         $Minifier->minify($this->Dir . $Collection->compiled_dir . $NewFileName);
         
         return $Collection->base_url . $NewFileName;
+    }
+    
+    protected function transport($Collection) {
+        if($Collection->transport && !class_exists($Collection->transport->class)){
+            throw new CollectorException("Collector could not find transport class " . $Collection->transport->class);
+        } else if($Collection->transport && class_exists($Collection->transport->class)){ 
+            $Data = new \ReflectionClass($Collection->transport->class);
+            $Class = $Data->newInstanceArgs([$Collection, $Collection->transport->parameters]);
+        }
     }
     
     protected function clear() {
