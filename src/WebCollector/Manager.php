@@ -4,4 +4,6 @@ namespace WebCollector;
 
 class Manager {
     
+    
+    
 }
