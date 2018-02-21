@@ -1,0 +1,22 @@
+[
+	{
+		"name": "REBUS",
+		"base_url": "/",
+		"compiled_dir": "public/compiled/",
+		"transport": {
+			"class": "File"
+		},
+		"css": [
+			{
+				"file": "public/css/main.css",
+				"minify": true
+			},
+			{
+				"file": "public/css/input.less",
+				"import_dir": "public/css/",
+				"minify": true
+			}
+		],
+		"js": []
+	}
+]
