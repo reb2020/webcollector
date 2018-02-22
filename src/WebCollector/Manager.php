@@ -17,8 +17,8 @@ class Manager {
     private $Dir = null;
     
     public function __construct($Dir, $Collection = null) {
-        $this->Compiler = new Compiler("collections.lock");
-        $this->Config = new Config("collections.json");
+        $this->Compiler = new Compiler($Dir, "collections.lock");
+        $this->Config = new Config($Dir, "collections.json", $this->Compiler->load());
         $this->Dir = $Dir;
         
         if($Collection !== null){
@@ -42,93 +42,19 @@ class Manager {
             echo "Start \n";
             echo "Collection Name: " . $Collection->name . " \n";
             
-            if(!is_dir($this->Dir . $Collection->import_dir)){
-                throw new CollectorException("Collector not found import dir " . $Collection->import_dir);
-            }
-            
             echo "Scan Last Files: " . $this->Dir . $Collection->compiled_dir . "\n";
-            $LastFiles = [];
-            foreach (scandir($this->Dir . $Collection->compiled_dir) as $FileName){
-                if(strpos($FileName, ".css") || strpos($FileName, ".js")){
-                    $LastFiles[] = $FileName;
-                    echo " -> " . $FileName . "\n";
-                }
+            foreach ($Collection->old_files as $FileName){
+                echo " -> " . $FileName . "\n";
             }
-            $Collection->last_files = $LastFiles;
-            
-            //CSS
-            $NewCss = [];
-            $Index = 0;
-            foreach ($Collection->css->getData() as $Data){
-                $FileInfo = pathinfo($Data->file);
-                if($FileInfo["filename"] == "*"){
-                    $CssScanDir = $this->Dir . $FileInfo["dirname"] . DIRECTORY_SEPARATOR;
-                    if(!is_dir($CssScanDir)){
-                        throw new CollectorException("Collector not found import dir " . $CssScanDir);
-                    } else {
-                        foreach (scandir($CssScanDir) as $FileName){
-                            if(
-                                (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
-                                (!isset($FileInfo["extension"]) && (strpos($FileName, ".css") || strpos($FileName, ".less") || strpos($FileName, ".scss")))
-                               ){
-                                   $NewCss[$Index]['file'] = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
-                                   if($Data->import_dir){
-                                        $NewCss[$Index]['import_dir'] = $Data->import_dir;
-                                   }
-                                   $NewCss[$Index]['minify'] = $Data->minify;
-                                   $Index++;
-                            }
-                        }
-                    }
-                } else {
-                    $NewCss[$Index]['file'] = $Data->file;
-                    if($Data->import_dir){
-                        $NewCss[$Index]['import_dir'] = $Data->import_dir;
-                    }
-                    $NewCss[$Index]['minify'] = $Data->minify;
-                    $Index++;
-                }
-            }
-            
-            $Collection->css = new Collection(null, $NewCss);
-            
-            //JS
-            $NewJS = [];
-            $Index = 0;
-            foreach ($Collection->js->getData() as $Data){
-                $FileInfo = pathinfo($Data->file);
-                if($FileInfo["filename"] == "*"){
-                    $JsScanDir = $this->Dir . $FileInfo["dirname"] . DIRECTORY_SEPARATOR;
-                    if(!is_dir($JsScanDir)){
-                        throw new CollectorException("Collector not found import dir " . $JsScanDir);
-                    } else {
-                        foreach (scandir($JsScanDir) as $FileName){
-                            if(
-                                (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
-                                (!isset($FileInfo["extension"]) && strpos($FileName, ".js"))
-                                ){
-                                    $NewJS[$Index]['file'] = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
-                                    $NewJS[$Index]['minify'] = $Data->minify;
-                                    $Index++;
-                            }
-                        }
-                    }
-                } else {
-                    $NewJS[$Index]['file'] = $Data->file;
-                    $NewJS[$Index]['minify'] = $Data->minify;
-                    $Index++;
-                }
-            }
-            
-            $Collection->js = new Collection(null, $NewJS);
             
             $Data = [
                         'css' => $this->css($Collection), 
-                        'js' => $this->js($Collection)
+                        'js' => $this->js($Collection),
+                        'files' => $Collection->new_files
             ];
             
+            $Collection->send();
             $this->Compiler->add($Collection->name, $Data);
-            $this->transport($Collection);
         }
         
         $this->Compiler->save();
@@ -159,8 +85,10 @@ class Manager {
                 
                 if($Data->minify){
                     $Minify[] = $this->Dir . $Collection->compiled_dir . $NewFileName;
+                    $Collection->tmp_files[] = $NewFileName;
                 } else {
                     $Return[] = $Collection->base_url . $NewFileName;
+                    $Collection->new_files[] = $NewFileName;
                 }
             } else if ($FileInfo["extension"] == "less") {
                 $Less = new \lessc();
@@ -171,8 +99,10 @@ class Manager {
                 
                 if($Data->minify){
                     $Minify[] = $this->Dir . $Collection->compiled_dir . $NewFileName;
+                    $Collection->tmp_files[] = $NewFileName;
                 } else {
                     $Return[] = $Collection->base_url . $NewFileName;
+                    $Collection->new_files[] = $NewFileName;
                 }
                 
                 $Less->compileFile($this->Dir . $Data->file, $this->Dir . $Collection->compiled_dir . $NewFileName);
@@ -185,8 +115,10 @@ class Manager {
                 
                 if($Data->minify){
                     $Minify[] = $this->Dir . $Collection->compiled_dir . $NewFileName;
+                    $Collection->tmp_files[] = $NewFileName;
                 } else {
                     $Return[] = $Collection->base_url . $NewFileName;
+                    $Collection->new_files[] = $NewFileName;
                 }
                 
                 $Compiled = $Scss->compile(file_get_contents($this->Dir . $Data->file), $this->Dir . $Data->file);
@@ -213,6 +145,8 @@ class Manager {
         
         $Minifier->minify($this->Dir . $Collection->compiled_dir . $NewFileName);
         
+        $Collection->new_files[] = $NewFileName;
+        
         return $Collection->base_url . $NewFileName;
     }
 
@@ -234,8 +168,10 @@ class Manager {
                 
                 if($Data->minify){
                     $Minify[] = $this->Dir . $Collection->compiled_dir . $NewFileName;
+                    $Collection->tmp_files[] = $NewFileName;
                 } else {
                     $Return[] = $Collection->base_url . $NewFileName;
+                    $Collection->new_files[] = $NewFileName;
                 }
             }
         }
@@ -258,27 +194,14 @@ class Manager {
         
         $Minifier->minify($this->Dir . $Collection->compiled_dir . $NewFileName);
         
+        $Collection->new_files[] = $NewFileName;
+        
         return $Collection->base_url . $NewFileName;
-    }
-    
-    protected function transport($Collection) {
-        if($Collection->transport && !class_exists($Collection->transport->class)){
-            throw new CollectorException("Collector could not find transport class " . $Collection->transport->class);
-        } else if($Collection->transport && class_exists($Collection->transport->class)){ 
-            $Data = new \ReflectionClass($Collection->transport->class);
-            $Class = $Data->newInstanceArgs([$Collection, $Collection->transport->parameters]);
-        }
     }
     
     protected function clear() {
         foreach ($this->Collections as $Collection){
-            echo "Delete Old Files: " . $this->Dir . $Collection->compiled_dir . "\n";
-            foreach ($Collection->last_files as $File){
-                echo " -> " . $File . " \n";
-                if(file_exists($this->Dir . $Collection->compiled_dir . $File)){
-                    unlink($this->Dir . $Collection->compiled_dir . $File);
-                }
-            }
+            $Collection->clear();
         }
     }
     
