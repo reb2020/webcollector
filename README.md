@@ -7,6 +7,7 @@ For examples:
 if you need to send files on extarnal server after collected you can use it "transport" parameter.
 Your class has to inherit class WebCollector/Transport and implements two methods "send" and "delete".
 
+```
 [
 	{
 		"name": "REBUS",
@@ -32,9 +33,11 @@ Your class has to inherit class WebCollector/Transport and implements two method
 		"js": []
 	}
 ]
+```
 
 Or simple example
 
+```
 [
 	{
 		"name": "REBUS",
@@ -54,3 +57,4 @@ Or simple example
 		"js": []
 	}
 ]
+```
