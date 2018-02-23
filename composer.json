@@ -1,7 +1,7 @@
 {
     "name": "reb/webcollector",
     "description": "Simple collector for your css and js files",
-    "keywords": ["web", "webpack", "collector"],
+    "keywords": ["web", "webpack", "collector", "css", "js", "minify", "less", "scss"],
     "homepage": "https://github.com/reb2020/webcollector",
     "type": "library",
     "license": "MIT",
