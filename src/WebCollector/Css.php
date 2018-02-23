@@ -19,6 +19,12 @@ class Css {
         return $this->_data;
     }
     
+    protected function scanDir($Dir, $Depth = 1){
+        $objects = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($Dir), \RecursiveIteratorIterator::LEAVES_ONLY);
+        $objects->setMaxDepth($Depth);
+        return new \RegexIterator($objects, '/^(.*.css|.*.less|.*.scss)$/i', \RecursiveRegexIterator::GET_MATCH);
+    }
+    
     protected function prepared() {
         $NewCss = [];
         $Index = 0;
@@ -29,13 +35,14 @@ class Css {
                 if(!is_dir($CssScanDir)){
                     throw new CollectorException("Collector not found import dir " . $CssScanDir);
                 } else {
-                    foreach (scandir($CssScanDir) as $FileName){
+                    
+                    foreach ($this->scanDir($CssScanDir, (!isset($FileInfo["extension"]) ? 7 : 1)) as $FileName => $FileObject){
                         if(
                             (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
-                            (!isset($FileInfo["extension"]) && (strpos($FileName, ".css") || strpos($FileName, ".less") || strpos($FileName, ".scss")))
+                            (!isset($FileInfo["extension"]))
                             ){
                                 $NewCss[$Index] = new \stdClass();
-                                $NewCss[$Index]->file = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
+                                $NewCss[$Index]->file = substr($FileName, strlen($this->Dir), strlen($FileName));
                                 if(isset($Data->import_dir)){
                                     $NewCss[$Index]->import_dir = $Data->import_dir;
                                 }

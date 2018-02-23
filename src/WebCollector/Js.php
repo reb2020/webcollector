@@ -19,6 +19,12 @@ class Js {
         return $this->_data;
     }
     
+    protected function scanDir($Dir, $Depth = 1){
+        $objects = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($Dir), \RecursiveIteratorIterator::LEAVES_ONLY);
+        $objects->setMaxDepth($Depth);
+        return new \RegexIterator($objects, '/^(.*.js)$/i', \RecursiveRegexIterator::GET_MATCH);
+    }
+    
     protected function prepared() {
         $NewJS = [];
         $Index = 0;
@@ -29,13 +35,13 @@ class Js {
                 if(!is_dir($JsScanDir)){
                     throw new CollectorException("Collector not found import dir " . $JsScanDir);
                 } else {
-                    foreach (scandir($JsScanDir) as $FileName){
+                    foreach ($this->scanDir($JsScanDir, (!isset($FileInfo["extension"]) ? 7 : 1)) as $FileName){
                         if(
                             (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
-                            (!isset($FileInfo["extension"]) && strpos($FileName, ".js"))
+                            (!isset($FileInfo["extension"]))
                             ){
                                 $NewJS[$Index] = new \stdClass();
-                                $NewJS[$Index]->file = $FileInfo["dirname"] . DIRECTORY_SEPARATOR . $FileName;
+                                $NewJS[$Index]->file = substr($FileName, strlen($this->Dir), strlen($FileName));
                                 $NewJS[$Index]->minify = $Data->minify;
                                 $Index++;
                         }
