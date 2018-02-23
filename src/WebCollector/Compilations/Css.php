@@ -56,7 +56,7 @@ class Css {
                 }
             } else if ($FileInfo["extension"] == "less") {
                 $Less = new \lessc();
-                if($Data->import_dir){
+                if(isset($Data->import_dir) && $Data->import_dir){
                     $Less->addImportDir($this->Collection->dir . $Data->import_dir);
                 }
                 $NewFileName = md5(time() . rand(10000, 99999)) . '.css';
@@ -72,7 +72,7 @@ class Css {
                 $Less->compileFile($this->Collection->dir . $Data->file, $this->Collection->dir . $this->Collection->compiled_dir . $NewFileName);
             } else if ($FileInfo["extension"] == "scss") {
                 $Scss = new \Leafo\ScssPhp\Compiler();
-                if($Data->import_dir){
+                if(isset($Data->import_dir) && $Data->import_dir){
                     $Scss->setImportPaths($this->Collection->dir . $Data->import_dir);
                 }
                 $NewFileName = md5(time() . rand(10000, 99999)) . '.css';

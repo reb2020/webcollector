@@ -63,6 +63,11 @@ class Manager {
                         'files' => $Collection->new_files
             ];
             
+            echo "Generate Files: \n";
+            foreach ($Collection->new_files as $FileName){
+                echo " -> " . $FileName . " \n";
+            }
+            
             $Collection->send();
             $this->Compiler->add($Collection->name, $Data);
         }
