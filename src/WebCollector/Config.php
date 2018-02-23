@@ -5,7 +5,7 @@ namespace WebCollector;
 use WebCollector\Exception as CollectorException;
 use WebCollector\Collection as Collection;
 
-class Config {
+final class Config {
     
     private $File = null;
     private $Dir = null;
@@ -26,7 +26,7 @@ class Config {
         }
     }
     
-    public function load(){
+    protected function load(){
         foreach (json_decode(file_get_contents($this->Dir . $this->File)) as $Data){
             if(!isset($Data->dir)){
                 $Data->dir = $this->Dir;

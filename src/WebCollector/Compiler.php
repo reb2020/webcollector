@@ -4,23 +4,27 @@ namespace WebCollector;
 
 use WebCollector\Exception as CollectorException;
 use WebCollector\Collection as Collection;
+use WebCollector\Compilations\Css as Css;
+use WebCollector\Compilations\Js as Js;
 
-class Compiler {
+final class Compiler {
     
     private $File = null;
     private $Dir = null;
     private $Collections = [];
+    private $LastFiles = [];
     
     public function __construct(String $Dir, String $File) {
         $this->File = $File;
         $this->Dir = $Dir;
+        $this->loadLastFiles();
     }
     
     public function add($Name, Array $Data = []) {
         $this->Collections[$Name] = $Data;
     }
     
-    public function load(){
+    protected function loadLastFiles(){
         $Load = [];
         if(file_exists($this->Dir . $this->File)){
             foreach (json_decode(file_get_contents($this->Dir . $this->File)) as $Data){
@@ -29,7 +33,23 @@ class Compiler {
                 }
             }
         }
-        return $Load;
+        $this->LastFiles = $Load;
+    }
+    
+    public function compileCss($Collection) {
+        $Css = new Css($Collection);
+        $Css->execute();
+        return $Css;
+    }
+
+    public function compileJs($Collection) {
+        $Js = new Js($Collection);
+        $Js->execute();
+        return $Js;
+    }
+    
+    public function getLastFiles(){
+        return $this->LastFiles;
     }
     
     public function save() {
