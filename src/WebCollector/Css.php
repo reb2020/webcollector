@@ -38,7 +38,7 @@ class Css {
                     
                     foreach ($this->scanDir($CssScanDir, (!isset($FileInfo["extension"]) ? 7 : 1)) as $FileName => $FileObject){
                         if(
-                            (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
+                            (isset($FileInfo["extension"]) && $FileInfo["extension"] != '*' && strpos($FileName, "." . $FileInfo["extension"])) ||
                             (!isset($FileInfo["extension"]))
                             ){
                                 $NewCss[$Index] = new \stdClass();

@@ -37,7 +37,7 @@ class Js {
                 } else {
                     foreach ($this->scanDir($JsScanDir, (!isset($FileInfo["extension"]) ? 7 : 1)) as $FileName){
                         if(
-                            (isset($FileInfo["extension"]) && strpos($FileName, "." . $FileInfo["extension"])) ||
+                            (isset($FileInfo["extension"]) && $FileInfo["extension"] != '*' && strpos($FileName, "." . $FileInfo["extension"])) ||
                             (!isset($FileInfo["extension"]))
                             ){
                                 $NewJS[$Index] = new \stdClass();
