@@ -5,18 +5,18 @@ namespace WebCollector;
 abstract class Transport {
     
     protected $Dir = null;
-    protected $NewFiles = [];
-    protected $OldFiles = [];
+    protected $Files = [];
+    protected $LastFiles = [];
     protected $Params = null;
     
     public function __construct($Params = null) {
         $this->Params = $Params;
     }
     
-    public function initialize($Dir, $NewFiles = [], $OldFiles = []) {
+    public function initialize($Dir, $NewFiles = [], $LastFiles = []) {
         $this->Dir = $Dir;
-        $this->NewFiles = $NewFiles;
-        $this->OldFiles = $OldFiles;
+        $this->Files = $NewFiles;
+        $this->LastFiles = $LastFiles;
     }
     
     abstract public function send();

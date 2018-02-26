@@ -2,9 +2,7 @@
 
 namespace WebCollector;
 
-use WebCollector\Css as Css;
-use WebCollector\Js as Js;
-
+use WebCollector\Bundle as Bundle;
 use WebCollector\Exception as CollectorException;
 
 class Collection {
@@ -13,25 +11,28 @@ class Collection {
     
     public $base_url = null;
 
-    public $dir = null;
+    public $root_dir = null;
 
     public $compiled_dir = null;
 
     public $transport = null;
-
-    public $css = null;
-
-    public $js = null;
     
-    public $tmp_files = [];
+    public $filters = [];
 
-    public $old_files = [];
+    public $css = [];
 
-    public $new_files = [];
+    public $js = [];
+
+    public $copy = [];
+
+
+    public $last_files = [];
+
+    public $files = [];
     
     
     public function __construct($Data = []) {
-        $this->setData($Data);
+        $this->initialize($Data);
     }
     
     protected function initTransport($Data){
@@ -47,8 +48,45 @@ class Collection {
         
         return new $ClassName($Parameters);
     }
+
+    protected function initFilters($Data){
+        foreach ($Data as $Filter){
+            if(!isset($Filter->name)){
+                throw new CollectorException("Filter name is required.");
+            }
+            $ClassName = $Filter->class;
+            if(!class_exists($ClassName)){
+                throw new CollectorException("Collector could not find filter class " . $ClassName);
+            } 
+            $this->filters[$Filter->name] = $ClassName;
+        }
+    }
+    
+    protected function initCss($Css, $DataBundle) {
+        foreach ($Css as $CssBundle){
+            
+            $DataBundlePut = [];
+            foreach ($CssBundle as $Name => $Value){
+                $DataBundlePut[$Name] = $Value;
+            }
+            
+            $this->css[] = new Bundle('css', array_merge($DataBundlePut, $DataBundle));
+        }
+    }
+
+    protected function initJs($Js, $DataBundle) {
+        foreach ($Js as $JsBundle){
+            
+            $DataBundlePut = [];
+            foreach ($JsBundle as $Name => $Value){
+                $DataBundlePut[$Name] = $Value;
+            }
+            
+            $this->js[] = new Bundle('js', array_merge($DataBundlePut, $DataBundle));
+        }
+    }
    
-    public function setData($Data) {
+    protected function initialize($Data) {
         $Css = [];
         $Js = [];
         foreach ($Data AS $Name => $Value){
@@ -56,6 +94,8 @@ class Collection {
                 $Css = $Value;
             } else if($Name == 'js'){
                 $Js = $Value;
+            } else if($Name == 'filters'){
+                $this->{$Name} = $this->initFilters($Value);
             } else if($Name == 'transport'){
                 $this->{$Name} = $this->initTransport($Value);
             } else {
@@ -63,44 +103,66 @@ class Collection {
             }
         }
         
-        if(!$this->compiled_dir || !is_dir($this->dir . $this->compiled_dir)){
+        if(!$this->root_dir || !is_dir($this->root_dir)){
+            throw new CollectorException("Collector not found root dir " . $this->root_dir);
+        }
+        
+        if(!$this->compiled_dir || !is_dir($this->root_dir . $this->compiled_dir)){
             throw new CollectorException("Collector not found compiled dir " . $this->compiled_dir);
         }
         
-        $this->css = new Css($this->dir, $Css);
-        $this->js = new Js($this->dir, $Js);
+        $DataBundle = [
+            'root_dir' => $this->root_dir,
+            'compiled_dir' => $this->compiled_dir,
+            'filters' => $this->filters
+        ];
+        
+        $this->initCss($Css, $DataBundle);
+        $this->initJs($Js, $DataBundle);
     }
     
-    public function getData() {
-        return $this->_data;
+    public function collectCss() {
+        $Files = [];
+        foreach ($this->css as $Bundle) {
+            $Collect = $Bundle->collect();
+            $Files[] = $this->base_url . $Collect["file"] . $Collect["version"];
+            $this->files[] = $Collect["file"];
+        }
+        return $Files;
     }
+    
+    public function collectJs() {
+        $Files = [];
+        foreach ($this->js as $Bundle) {
+            $Collect = $Bundle->collect();
+            $Files[] = $this->base_url . $Collect["file"] . $Collect["version"];
+            $this->files[] = $Collect["file"];
+        }
+        return $Files;
+    }
+    
     
     public function send() {
         if($this->transport) {
-            $this->transport->initialize($this->dir, $this->new_files, $this->old_files);
+            $this->transport->initialize($this->root_dir . $this->compiled_dir, $this->files, $this->last_files);
             $this->transport->send();
         }
     }
     
     public function clear() {
-        foreach ($this->tmp_files as $File){
-            if(file_exists($this->dir . $this->compiled_dir . $File)){
-                unlink($this->dir . $this->compiled_dir . $File);
-            }
-        }
-        $this->tmp_files = [];
         
         if($this->transport) {
-            $this->transport->initialize($this->dir, $this->new_files, $this->old_files);
+            $this->transport->initialize($this->root_dir . $this->compiled_dir, $this->files, $this->last_files);
             $this->transport->delete();
         }
         
-        foreach ($this->old_files as $File){
-            if(file_exists($this->dir . $this->compiled_dir . $File)){
-                unlink($this->dir . $this->compiled_dir . $File);
+        foreach ($this->last_files as $File){
+            if(file_exists($this->root_dir . $this->compiled_dir . $File) && !in_array($File, $this->files)){
+                unlink($this->root_dir . $this->compiled_dir . $File);
             }
         }
-        $this->old_files = [];
+        
+        $this->last_files = [];
     }
     
 }

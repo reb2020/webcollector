@@ -15,8 +15,8 @@ class Manager {
     private $Dir = null;
     
     public function __construct($Dir, $Collection = null) {
+        $this->Config = new Config($Dir, "collections.json");
         $this->Compiler = new Compiler($Dir, "collections.lock");
-        $this->Config = new Config($Dir, "collections.json", $this->Compiler->getLastFiles());
         $this->Dir = $Dir;
         
         if($Collection !== null){
@@ -40,33 +40,30 @@ class Manager {
             echo "Start \n";
             echo "Collection Name: " . $Collection->name . " \n";
             
-            echo "Scan Last Files: " . $this->Dir . $Collection->compiled_dir . "\n";
-            foreach ($Collection->old_files as $FileName){
+            $Collection->last_files = $this->Compiler->getLastFiles($Collection->name);
+            
+            echo "Scan Last Files: " . $Collection->root_dir . $Collection->compiled_dir . "\n";
+            foreach ($Collection->last_files as $FileName){
                 echo " -> " . $FileName . "\n";
             }
             
             echo "Compile CSS: \n";
-            $Css = $this->Compiler->compileCss($Collection);
-            foreach ($Css->files() as $FileName){
+            $Css = $Collection->collectCss();
+            foreach ($Css as $FileName){
                 echo " -> " . $FileName . " \n";
             }
 
             echo "Compile JS: \n";
-            $Js = $this->Compiler->compileJs($Collection);
-            foreach ($Js->files() as $FileName){
+            $Js = $Collection->collectJs();
+            foreach ($Js as $FileName){
                 echo " -> " . $FileName . " \n";
             }
             
             $Data = [
-                        'css' => $Css->newFiles(), 
-                        'js' => $Js->newFiles(),
-                        'files' => $Collection->new_files
+                'css' => $Css, 
+                'js' => $Js,
+                'files' => $Collection->files
             ];
-            
-            echo "Generate Files: \n";
-            foreach ($Collection->new_files as $FileName){
-                echo " -> " . $FileName . " \n";
-            }
             
             $Collection->send();
             $this->Compiler->add($Collection->name, $Data);

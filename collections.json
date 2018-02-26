@@ -3,6 +3,12 @@
 		"name": "REBUS",
 		"base_url": "/",
 		"compiled_dir": "public/compiled/",
+		"filters": [
+			{
+				"name": "less",
+				"class": ""
+			}
+		],
 		"transport": {
 			"class": "File",
 			"parameters": {
@@ -11,15 +17,36 @@
 		},
 		"css": [
 			{
-				"file": "public/css/main.css",
-				"minify": true
+				"file": "rebus.css",
+				"minify": true,
+				"version": true,
+				"source": [
+					{
+						"file": "public/css/main.css",
+						"import_dir": "",
+						"filters": ["less", {
+							"name": "less",
+							"params": {
+								"import_dir": ""
+							}
+						}]
+					}
+				]
 			},
 			{
-				"file": "public/css/input.less",
-				"import_dir": "public/css/",
-				"minify": true
+				"file": "rebus_dir.css",
+				"minify": true,
+				"source": [
+					{
+						"dir": "public/css/",
+						"regex": "",
+						"import_dir": "",
+						"filters": ["less"]
+					}
+				]
 			}
 		],
-		"js": []
+		"js": [],
+		"copy": []
 	}
 ]

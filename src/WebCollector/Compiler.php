@@ -3,9 +3,6 @@
 namespace WebCollector;
 
 use WebCollector\Exception as CollectorException;
-use WebCollector\Collection as Collection;
-use WebCollector\Compilations\Css as Css;
-use WebCollector\Compilations\Js as Js;
 
 final class Compiler {
     
@@ -36,19 +33,10 @@ final class Compiler {
         $this->LastFiles = $Load;
     }
     
-    public function compileCss($Collection) {
-        $Css = new Css($Collection);
-        $Css->execute();
-        return $Css;
-    }
-
-    public function compileJs($Collection) {
-        $Js = new Js($Collection);
-        $Js->execute();
-        return $Js;
-    }
-    
-    public function getLastFiles(){
+    public function getLastFiles($Name = null){
+        if($Name !== null){
+            return $this->LastFiles[$Name];
+        }
         return $this->LastFiles;
     }
     

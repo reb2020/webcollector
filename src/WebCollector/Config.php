@@ -10,12 +10,10 @@ final class Config {
     private $File = null;
     private $Dir = null;
     private $Collections = [];
-    private $Last = [];
     
-    public function __construct(String $Dir, String $File, $Last = []) {
+    public function __construct(String $Dir, String $File) {
         $this->File = $File;
         $this->Dir = $Dir;
-        $this->Last = $Last;
         $this->validateFile();
         $this->load();
     }
@@ -28,13 +26,10 @@ final class Config {
     
     protected function load(){
         foreach (json_decode(file_get_contents($this->Dir . $this->File)) as $Data){
-            if(!isset($Data->dir)){
-                $Data->dir = $this->Dir;
+            if(!isset($Data->root_dir)){
+                $Data->root_dir = $this->Dir;
             }
             $this->Collections[$Data->name] = new Collection($Data);
-            if(isset($this->Last[$Data->name])){
-                $this->Collections[$Data->name]->old_files = $this->Last[$Data->name];
-            }
         }
     }
     
