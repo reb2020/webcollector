@@ -122,7 +122,7 @@ class Collection {
             throw new CollectorException("Collector not found root dir " . $this->root_dir);
         }
         
-        if(!$this->compiled_dir || !is_dir($this->root_dir . $this->compiled_dir)){
+        if(!$this->compiled_dir || !is_dir($this->compiled_dir)){
             throw new CollectorException("Collector not found compiled dir " . $this->compiled_dir);
         }
         
@@ -169,7 +169,7 @@ class Collection {
     
     public function send() {
         if($this->transport) {
-            $this->transport->initialize($this->root_dir . $this->compiled_dir, $this->files, $this->last_files);
+            $this->transport->initialize($this->compiled_dir, $this->files, $this->last_files);
             $this->transport->send();
         }
     }
@@ -177,13 +177,13 @@ class Collection {
     public function clear() {
         
         if($this->transport) {
-            $this->transport->initialize($this->root_dir . $this->compiled_dir, $this->files, $this->last_files);
+            $this->transport->initialize($this->compiled_dir, $this->files, $this->last_files);
             $this->transport->delete();
         }
         
         foreach ($this->last_files as $File){
-            if(file_exists($this->root_dir . $this->compiled_dir . $File) && !in_array($File, $this->files)){
-                unlink($this->root_dir . $this->compiled_dir . $File);
+            if(file_exists($this->compiled_dir . $File) && !in_array($File, $this->files)){
+                unlink($this->compiled_dir . $File);
             }
         }
         

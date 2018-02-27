@@ -23,25 +23,12 @@
 				"source": [
 					{
 						"file": "public/css/main.css",
-						"import_dir": "",
 						"filters": ["less", {
 							"name": "less",
 							"params": {
 								"import_dir": ""
 							}
 						}]
-					}
-				]
-			},
-			{
-				"file": "rebus_dir.css",
-				"minify": true,
-				"source": [
-					{
-						"dir": "public/css/",
-						"regex": "",
-						"import_dir": "",
-						"filters": ["less"]
 					}
 				]
 			}

@@ -29,6 +29,8 @@ final class Config {
             if(!isset($Data->root_dir)){
                 $Data->root_dir = $this->Dir;
             }
+            $Data->compiled_dir = str_replace('~', $Data->root_dir, $Data->compiled_dir);
+            $Data->compiled_dir = str_replace('//', '/', $Data->compiled_dir);
             $this->Collections[$Data->name] = new Collection($Data);
         }
     }

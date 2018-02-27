@@ -42,7 +42,7 @@ class Manager {
             
             $Collection->last_files = $this->Compiler->getLastFiles($Collection->name);
             
-            echo "Scan Last Files: " . $Collection->root_dir . $Collection->compiled_dir . "\n";
+            echo "Scan Last Files: " . $Collection->compiled_dir . "\n";
             foreach ($Collection->last_files as $FileName){
                 echo " -> " . $FileName . "\n";
             }
