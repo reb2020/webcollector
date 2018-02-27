@@ -2,6 +2,7 @@
 
 namespace WebCollector;
 
+use WebCollector\Copy as Copy;
 use WebCollector\Bundle as Bundle;
 use WebCollector\Exception as CollectorException;
 
@@ -23,7 +24,7 @@ class Collection {
 
     public $js = [];
 
-    public $copy = [];
+    public $copy = null;
 
 
     public $last_files = [];
@@ -85,15 +86,29 @@ class Collection {
             $this->js[] = new Bundle('js', array_merge($DataBundlePut, $DataBundle));
         }
     }
+
+    protected function initCopy($Copy) {
+        $this->copy = new Copy(
+            [
+                'root_dir' => $this->root_dir,
+                'compiled_dir' => $this->compiled_dir,
+                'filters' => $this->filters,
+                'source' => $Copy
+            ]
+        );
+    }
    
     protected function initialize($Data) {
         $Css = [];
         $Js = [];
+        $Copy = [];
         foreach ($Data AS $Name => $Value){
             if($Name == 'css'){
                 $Css = $Value;
             } else if($Name == 'js'){
                 $Js = $Value;
+            } else if($Name == 'copy'){
+                $Copy = $Value;
             } else if($Name == 'filters'){
                 $this->{$Name} = $this->initFilters($Value);
             } else if($Name == 'transport'){
@@ -119,6 +134,7 @@ class Collection {
         
         $this->initCss($Css, $DataBundle);
         $this->initJs($Js, $DataBundle);
+        $this->initCopy($Copy);
     }
     
     public function collectCss() {
@@ -137,6 +153,15 @@ class Collection {
             $Collect = $Bundle->collect();
             $Files[] = $this->base_url . $Collect["file"] . $Collect["version"];
             $this->files[] = $Collect["file"];
+        }
+        return $Files;
+    }
+    
+    public function copy() {
+        $Files = [];
+        foreach ($this->copy->execute() as $FileName) {
+            $this->files[] = $FileName;
+            $Files[] = $FileName;
         }
         return $Files;
     }

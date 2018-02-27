@@ -3,11 +3,12 @@
 namespace WebCollector;
 
 use WebCollector\Exception as CollectorException;
+use WebCollector\Data as Data;
 use WebCollector\Resources\Css as Css;
 use WebCollector\Resources\Js as Js;
 use MatthiasMullie\Minify;
 
-class Bundle {
+class Bundle extends Data {
     
     protected $type = null;
     
@@ -17,67 +18,15 @@ class Bundle {
 
     protected $minify = false;
     
-    protected $root_dir = null;
-
-    protected $compiled_dir = null;
-
-    protected $filters = [];
-
-    protected $source = [];
-    
     public function __construct($Type, $Data = []) {
         $this->type = $Type;
         $this->initialize($Data);
     }
     
-    protected function validateFile($File){
-        if(!file_exists($this->root_dir . $File)){
-            throw new CollectorException("Collection file " . $File . " was not found.");
-        }
-    }
-    
-    protected function validateFilter($Data){
-        $Params = [];
-        if(is_object($Data)){
-            if(!isset($Data->name)){
-                throw new CollectorException("Filter name is required.");
-            }
-            if(isset($Data->class)){
-                $ClassName = $Data->class;
-                if(!class_exists($ClassName)){
-                    throw new CollectorException("Collector could not find filter class " . $ClassName);
-                } 
-            } else if(!array_key_exists($Data->name, $this->filters)){
-                $ClassName = '\\WebCollector\\Filters\\' . ucfirst(strtolower($Data->name));
-                if(!class_exists($ClassName)){
-                    throw new CollectorException("Collector could not find filter class " . $ClassName);
-                }
-            } else {
-                $ClassName = $this->filters[$Data->name];
-            }
-            
-            if(isset($Data->params)){
-                $Params = $Data->params;
-            }
-        } else if(!array_key_exists($Data, $this->filters)){
-            $ClassName = '\\WebCollector\\Filters\\' . ucfirst(strtolower($Data));
-            if(!class_exists($ClassName)){
-                throw new CollectorException("Collector could not find filter class " . $ClassName);
-            }
-        } else {
-            $ClassName = $this->filters[$Data];
-        }
-        
-        return [
-            'class' => $ClassName,
-            'params' => $Params
-        ];
-    }
-    
     protected function scanDir($Dir, $Regex, $Depth = 1){
         $objects = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($Dir), \RecursiveIteratorIterator::LEAVES_ONLY);
         $objects->setMaxDepth($Depth);
-        return new \RegexIterator($objects, '/^(.*.css|.*.less|.*.scss)$/i', \RecursiveRegexIterator::GET_MATCH);
+        return new \RegexIterator($objects, $Regex, \RecursiveRegexIterator::GET_MATCH);
     }
     
     protected function addSource($File, $Filters) {
@@ -112,6 +61,10 @@ class Bundle {
                     $Regex = '/^(.*.js)$/i';
                 }
                 foreach ($this->scanDir($this->root_dir . $SourceData->dir, (isset($SourceData->regex) ? $SourceData->regex : $Regex), 7) as $FileName => $FileObject){
+                    $FileInfo = pathinfo($FileName);
+                    if(in_array($FileInfo['basename'], ['.', '..'])){
+                        continue;
+                    }
                     $this->addSource(substr($FileName, strlen($this->root_dir), strlen($FileName)), $SourceDataFilters);
                 }
             }

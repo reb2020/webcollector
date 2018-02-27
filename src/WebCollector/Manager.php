@@ -58,6 +58,11 @@ class Manager {
             foreach ($Js as $FileName){
                 echo " -> " . $FileName . " \n";
             }
+
+            echo "Copy: \n";
+            foreach ($Collection->copy() as $FileName){
+                echo " -> " . $FileName . " \n";
+            }
             
             $Data = [
                 'css' => $Css, 

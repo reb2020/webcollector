@@ -28,8 +28,12 @@ abstract class Resource {
         }
     }
     
-    protected function getContent(){
+    public function getContent(){
         return file_get_contents($this->RootDir . $this->File);
+    }
+
+    public function getFile(){
+        return $this->File;
     }
     
     public function filter() {
